@@ -1,0 +1,141 @@
+@page "/artikel/{Id}"
+@inject IRetailDataProvider Provider
+@inject IDecisionEngine Engine
+
+<PageTitle>@(Product?.Name ?? "Artikel") · RetailQ</PageTitle>
+
+@if (Product is null)
+{
+    <section class="not-found"><p class="eyebrow">ARTIKEL NICHT VERFÜGBAR</p><h1>Artikel nicht gefunden.</h1><p>Der Artikel gehört möglicherweise nicht mehr zur aktiven Datenquelle.</p><a href="/">Zur Decision Queue</a></section>
+}
+else
+{
+    <a class="back-link" href="/">← Zurück zu Priority Decisions</a>
+
+    @* 1. Product Context: identity, assignment and assessment status are visible first. *@
+    <section class="article-title">
+        <div><p class="eyebrow">ARTIKEL-360° · @Product.Category</p><h1>@Product.Name</h1><p>@Product.Sku · Werk @Product.Plant · Lagerort @Product.StorageLocation · Basiseinheit @Product.Unit</p></div>
+        <b class="status @Decision.Status.ToString().ToLowerInvariant()">@StatusLabel(Decision.Status)</b>
+    </section>
+
+    <section class="data-context" aria-labelledby="data-context-title">
+        <div><p class="eyebrow" id="data-context-title">DATA CONTEXT</p><strong>@Provider.Status.Label</strong><small>@(Provider.Status.IsRemote ? "SAP-gehostete Testumgebung · keine produktiven ERP-Daten" : "Lokaler, reproduzierbarer Datenstand")</small></div>
+        <dl>
+            <div><dt>Produktstamm</dt><dd>@SourceLabel(Product.MasterDataSource)</dd></div>
+            <div><dt>Bestand</dt><dd>@SourceLabel(Product.StockDataSource)</dd></div>
+            <div><dt>Verkaufshistorie</dt><dd>@SourceLabel(Product.SalesDataSource)</dd></div>
+            <div><dt>Entscheidung</dt><dd>LOKALE DECISION ENGINE</dd></div>
+        </dl>
+    </section>
+
+    @if (!Product.IsReplenishable)
+    {
+        <p class="eligibility-note" role="status"><b>Nicht disponierbar:</b> @EligibilityReason Es wird keine Nachfrage oder Bestellung erfunden.</p>
+    }
+
+    @* 2. Business Metrics: the four inputs a merchant needs before reading the recommendation. *@
+    <section class="article-metrics" aria-label="Geschäftskennzahlen">
+        <div><span>VERFÜGBARER BESTAND</span><strong>@Value(Product.UnrestrictedStock)</strong><small>frei verwendbar · @Product.Unit</small></div>
+        <div><span>ABSATZ / TAG</span><strong>@Value(Decision.DailyDemand, "0.0")</strong><small>Durchschnitt aus 14 Tagen</small></div>
+        <div><span>REICHWEITE</span><strong>@Value(Decision.CoverageDays, "0.0")<em> Tage</em></strong><small>bei aktuellem Absatz</small></div>
+        <div><span>LIEFERZEIT</span><strong>@Product.LeadTimeDays<em> Tage</em></strong><small>zzgl. @Product.SafetyDays Sicherheitstage</small></div>
+    </section>
+
+    @* 3. Recommended Action: explicit non-evaluable wording prevents a false healthy state. *@
+    <section class="decision-hero @Decision.Status.ToString().ToLowerInvariant()" aria-labelledby="decision-title">
+        <div><p class="eyebrow">EMPFOHLENE AKTION</p><h2 id="decision-title">@RecommendationTitle</h2><p>@Decision.Reason</p></div>
+        <dl>
+            <div><dt>Bestand bei Wareneingang</dt><dd>@Value(Decision.ProjectedArrivalStock, "0.0") @Product.Unit</dd></div>
+            <div><dt>Zielbestand</dt><dd>@Value(Decision.TargetStock) @Product.Unit</dd></div>
+        </dl>
+        <small>Indikative Empfehlung · regelbasiert · keine freigegebene Disposition</small>
+    </section>
+
+    <section class="card chart-card sales-card">
+        <p class="eyebrow">VERKAUFSHISTORIE · 14 KALENDERTAGE</p><h2>Absatzentwicklung</h2>
+        @if (Product.SalesHistory.Count == 14)
+        {
+            <div class="bars" role="img" aria-label="Absatz der letzten 14 Tage zwischen @Product.SalesHistory.Min() und @Product.SalesHistory.Max() @Product.Unit pro Tag">
+                @foreach (var value in Product.SalesHistory) { <span style="height:@(value * 7 + 8)px" title="@value @Product.Unit"></span> }
+            </div>
+            <div class="chart-axis"><span>Tag −13</span><span>Heute</span></div><small>Synthetische POS-Verkaufsdaten · @Product.Unit pro Tag</small>
+        }
+        else
+        {
+            <p class="empty-chart">Keine vollständige POS-Historie zugeordnet. Remote-Produktstammdaten allein erzeugen keine Nachfrage.</p>
+        }
+    </section>
+
+    @* 4. AI Assistance remains secondary and cannot replace the deterministic decision. *@
+    @if (Product.IsReplenishable && Decision.Status is not DecisionStatus.NotEvaluable and not DecisionStatus.DataError)
+    {
+        <section class="assistance-heading"><p class="eyebrow">AI ASSISTANCE</p><h2>Entscheidung erklären und Auswirkungen prüfen</h2><p>AI interpretiert und erläutert. Die lokale Decision Engine berechnet weiterhin alle Mengen.</p></section>
+        <DecisionExplanationPanel @key="ExplanationKey" Decision="Decision" />
+        <ScenarioAnalysisPanel @key="ScenarioKey" Product="Product" Baseline="Decision" />
+    }
+
+    @* 5. Decision Trace stays available for auditability without competing with the main action. *@
+    <details class="calculation">
+        <summary>Decision Trace <span>Regelversion 1.0 · vollständige Berechnungsgrundlage</span></summary>
+        @if (Decision.Status is DecisionStatus.NotEvaluable or DecisionStatus.DataError)
+        {
+            <p class="trace-warning">Keine Berechnung ausgeführt: @Decision.Reason</p>
+        }
+        else
+        {
+            <div class="calc-grid">
+                <p><b>Absatz / Tag</b><span>@Product.SalesHistory.Sum() @Product.Unit ÷ 14 Tage = @Decision.DailyDemand?.ToString("0.0")</span></p>
+                <p><b>Zielbestand</b><span>⌈@Decision.DailyDemand?.ToString("0.0") × (@Product.LeadTimeDays Lieferzeit + @Product.SafetyDays Sicherheit)⌉ = @Decision.TargetStock @Product.Unit</span></p>
+                <p><b>Bestellvorschlag</b><span>max(0, @Decision.TargetStock Ziel − @Product.UnrestrictedStock Bestand) = @Decision.ReorderQuantity @Product.Unit</span></p>
+            </div>
+        }
+    </details>
+}
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+    private ProductSnapshot? Product;
+    private ReplenishmentDecision Decision = default!;
+    private string DecisionKey => Product is null ? Id : $"{Product.Id}:{BaselineFingerprint.Create(Decision)}";
+    private string ExplanationKey => $"explain:{DecisionKey}";
+    private string ScenarioKey => $"scenario:{DecisionKey}";
+    private string EligibilityReason => Product!.ProductType == "SERV" || Product.Unit == "H"
+        ? "Serviceartikel bzw. nicht lagerfähige Mengeneinheit."
+        : Product.UnrestrictedStock is null ? "Für die gewählte Bestandszuordnung fehlt ein Bestand."
+        : "Es fehlt eine explizite Zuordnung zu synthetischen POS-Verkaufsdaten.";
+    private string RecommendationTitle => Decision.Status switch
+    {
+        DecisionStatus.NotEvaluable => "Keine belastbare Empfehlung möglich",
+        DecisionStatus.DataError => "Quelldaten müssen geprüft werden",
+        _ when Decision.ReorderQuantity > 0 => $"{Decision.ReorderQuantity} {Product!.Unit} nachbestellen",
+        _ => "Keine Bestellung erforderlich"
+    };
+
+    protected override void OnParametersSet()
+    {
+        Product = Provider.GetProduct(Id);
+        if (Product is not null) Decision = Engine.Evaluate(Product);
+    }
+
+    private static string Value<T>(T? value, string? format = null) where T : struct, IFormattable =>
+        value is null ? "—" : value.Value.ToString(format, System.Globalization.CultureInfo.CurrentCulture);
+    private static string SourceLabel(string source) => source switch
+    {
+        "SAP_API_SANDBOX" => "SAP API SANDBOX",
+        "SAP_ODATA_FIXTURE" => "SAP ODATA FIXTURE",
+        "SYNTHETIC_POS_EXPLICIT_MAPPING" => "SYNTHETISCHE POS-DATEN",
+        "NOT_MAPPED" => "DEMO / NICHT ZUGEORDNET",
+        "SYNTHETIC" or "DEMO_DATA" => "SYNTHETISCHE DEMODATEN",
+        _ => source.Replace('_', ' ')
+    };
+    private static string StatusLabel(DecisionStatus status) => status switch
+    {
+        DecisionStatus.Critical => "Kritisch",
+        DecisionStatus.Reorder => "Nachbestellen",
+        DecisionStatus.Stable => "Stabil",
+        DecisionStatus.NoCurrentDemand => "Kein Absatz",
+        DecisionStatus.NotEvaluable => "Nicht bewertbar",
+        DecisionStatus.DataError => "Datenfehler",
+        _ => "Prüfen"
+    };
+}

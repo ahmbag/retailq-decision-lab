@@ -1,0 +1,20 @@
+{
+  "@odata.context": "$metadata#A_Product",
+  "value": [
+    { "Product": "100012", "ProductDescription": "Vollmilch 1 L", "BaseUnit": "ST" },
+    { "Product": "100024", "ProductDescription": "Butter 250 g", "BaseUnit": "ST" },
+    { "Product": "100031", "ProductDescription": "Joghurt Natur 500 g", "BaseUnit": "ST" },
+    { "Product": "100045", "ProductDescription": "Mineralwasser 1 L", "BaseUnit": "ST" },
+    { "Product": "100056", "ProductDescription": "Orangensaft 1 L", "BaseUnit": "ST" },
+    { "Product": "100067", "ProductDescription": "Espresso Bohnen 1 kg", "BaseUnit": "ST" },
+    { "Product": "100073", "ProductDescription": "Pasta Penne 500 g", "BaseUnit": "ST" },
+    { "Product": "100081", "ProductDescription": "Tomaten passiert", "BaseUnit": "ST" },
+    { "Product": "100094", "ProductDescription": "Olivenöl 500 ml", "BaseUnit": "ST" },
+    { "Product": "100108", "ProductDescription": "Bananen lose", "BaseUnit": "ST" },
+    { "Product": "100119", "ProductDescription": "Äpfel Elstar 1 kg", "BaseUnit": "ST" },
+    { "Product": "100127", "ProductDescription": "Toastbrot Vollkorn", "BaseUnit": "ST" },
+    { "Product": "100136", "ProductDescription": "Schokolade Dunkel 100 g", "BaseUnit": "ST" },
+    { "Product": "100142", "ProductDescription": "Küchenrolle 4er", "BaseUnit": "ST" },
+    { "Product": "100155", "ProductDescription": "Saisontee Winter", "BaseUnit": "ST" }
+  ]
+}

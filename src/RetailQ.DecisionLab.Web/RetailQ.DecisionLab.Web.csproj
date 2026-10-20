@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\RetailQ.DecisionLab.Core\RetailQ.DecisionLab.Core.csproj" />
+    <ProjectReference Include="..\RetailQ.DecisionLab.Infrastructure\RetailQ.DecisionLab.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <!-- Keeps development credentials in the OS-level User Secrets store, outside this repository. -->
+    <UserSecretsId>RetailQ.DecisionLab.Web</UserSecretsId>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,23 @@
+﻿@page "/Error"
+@using System.Diagnostics
+
+<PageTitle>Fehler · RetailQ</PageTitle>
+
+<section class="not-found" role="alert">
+    <p class="eyebrow">KONTROLLIERTER FEHLERZUSTAND</p>
+    <h1>Die Ansicht konnte nicht geladen werden.</h1>
+    <p>Bitte kehre zur Decision Queue zurück und versuche es erneut. Interne Fehlerdetails werden nicht im Browser angezeigt.</p>
+    <a class="explain-button" href="/">Zur Decision Queue</a>
+    @if (ShowRequestId) { <small>Referenz: @RequestId</small> }
+</section>
+
+@code{
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? RequestId { get; set; }
+    private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+
+    protected override void OnInitialized() =>
+        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+}

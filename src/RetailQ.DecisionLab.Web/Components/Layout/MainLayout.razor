@@ -1,0 +1,24 @@
+@inherits LayoutComponentBase
+@inject IRetailDataProvider Provider
+
+<div class="app-shell">
+    <header class="topbar">
+        <a class="brand" href="/"><span class="brand-mark">R</span><span>RETAILQ</span><small>DECISION LAB</small></a>
+        <nav aria-label="Hauptnavigation"><a href="/">Decision Queue</a><span class="nav-dot" aria-hidden="true">•</span><span>@LocationLabel</span></nav>
+        <!-- Visible provenance prevents a fixture test from looking like a live SAP connection. -->
+        <span class="data-badge"><i></i> @SourceLabel</span>
+    </header>
+    <main>@Body</main>
+</div>
+
+@code {
+    private string SourceLabel => Provider.Status.Label;
+    private string LocationLabel => Provider.GetProducts().FirstOrDefault() is { } product
+        ? $"Werk {product.Plant}" : "Kein Datenstand";
+}
+
+<div id="blazor-error-ui" data-nosnippet>
+    Die Verbindung zur Anwendung wurde unterbrochen.
+    <a href="." class="reload">Neu laden</a>
+    <button type="button" class="dismiss" aria-label="Meldung schließen">×</button>
+</div>

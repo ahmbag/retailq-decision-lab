@@ -1,0 +1,165 @@
+@inject IScenarioAnalysisService Scenarios
+@implements IDisposable
+
+<section class="scenario-panel" aria-busy="@_isLoading">
+    <div class="scenario-heading">
+        <div>
+            <p class="eyebrow">WHAT-IF ANALYSIS</p>
+            <h2>Alternative Geschäftsbedingungen simulieren</h2>
+            <p>Das LLM interpretiert nur die Frage. Die bestehende Decision Engine berechnet das Ergebnis.</p>
+        </div>
+        <div class="scenario-badges"><span>SIMULATED – NOT APPLIED</span><span>@Product.Source.Replace('_', ' ')</span></div>
+    </div>
+
+    <div class="scenario-suggestions" aria-label="Beispielfragen">
+        <button type="button" @onclick="() => SelectQuestion(LeadTimeQuestion)" disabled="@_isLoading">Lieferverzögerung</button>
+        <button type="button" @onclick="() => SelectQuestion(DemandQuestion)" disabled="@_isLoading">Nachfrageanstieg</button>
+        <button type="button" @onclick="() => SelectQuestion(StockQuestion)" disabled="@_isLoading">Bestandsveränderung</button>
+    </div>
+    <label for="scenario-question">Natürlichsprachliche Szenariofrage</label>
+    <textarea id="scenario-question" @bind="_question" disabled="@_isLoading" rows="3" maxlength="500" aria-describedby="scenario-help"></textarea>
+    <small id="scenario-help" class="scenario-help">Unterstützt: Lieferzeit, Nachfrage oder sofort verfügbarer Bestand · genau eine Änderung pro Frage.</small>
+    <button type="button" class="scenario-submit" @onclick="AnalyzeAsync" disabled="@(_isLoading || string.IsNullOrWhiteSpace(_question))">
+        @(_isLoading ? "Szenario wird ausgewertet …" : "Szenario auswerten")
+    </button>
+
+    @if (_isLoading)
+    {
+        <div class="scenario-state" role="status"><b>Intent wird interpretiert und lokal berechnet …</b><span>Die Ausgangsentscheidung bleibt unverändert.</span></div>
+    }
+    else if (_result?.Status == ScenarioAnalysisStatus.Completed && _result.Comparison is { } comparison)
+    {
+        <div class="scenario-result">
+            <div class="scenario-interpretation">
+                <span>INTERPRETATION</span>
+                <b>@(_result.Interpretation?.Interpretation ?? comparison.ScenarioDescription)</b>
+            </div>
+            <div class="scenario-compare">
+                <div><span>AKTUELLE ENTSCHEIDUNG</span><strong>@comparison.Baseline.ReorderQuantity <em>@Product.Unit</em></strong><small>Lieferzeit @comparison.BaselineInputs.LeadTimeDays Tage · unverändert</small></div>
+                <div class="simulated"><span>SIMULIERTE ENTSCHEIDUNG</span><strong>@comparison.Simulated.ReorderQuantity <em>@Product.Unit</em></strong><small>Lieferzeit @comparison.SimulatedInputs.LeadTimeDays Tage · nicht angewendet</small></div>
+                <div class="delta"><span>ABWEICHUNG</span><strong>@Signed(comparison.ReorderQuantityDelta) <em>@Product.Unit</em></strong><small>@DeltaLabel(comparison.ReorderQuantityDelta)</small></div>
+            </div>
+            <div class="scenario-details">
+                <p><b>Geänderter Parameter</b><span>@ParameterLabel(_result.Interpretation)</span></p>
+                <p><b>Zielbestand</b><span>@comparison.Baseline.TargetStock → @comparison.Simulated.TargetStock Stk.</span></p>
+                <p><b>Bestand bei Wareneingang</b><span>@comparison.Baseline.ProjectedArrivalStock?.ToString("0.0") → @comparison.Simulated.ProjectedArrivalStock?.ToString("0.0") Stk.</span></p>
+            </div>
+            <div class="scenario-inputs">Effektive Berechnung: @comparison.SimulatedInputs.AvailableStock @Product.Unit Bestand · @comparison.SimulatedInputs.DailyDemand.ToString("0.0") @Product.Unit/Tag · @comparison.SimulatedInputs.LeadTimeDays Tage Lieferzeit</div>
+            @if (_result.Explanation?.Status == AiExplanationStatus.Completed)
+            {
+                <p class="scenario-explanation"><b>AI-Erklärung:</b> @_result.Explanation.Explanation!.Summary</p>
+            }
+            else
+            {
+                <p class="scenario-explanation"><b>Deterministische Zusammenfassung:</b> @comparison.ScenarioDescription Die Nachbestellmenge ändert sich um @Signed(comparison.ReorderQuantityDelta) Stück.</p>
+            }
+            <footer>Baseline @_result.BaselineFingerprint · @_result.DataSource.Replace('_', ' ') · Simulation nicht gespeichert</footer>
+        </div>
+        <button type="button" class="scenario-reset" @onclick="Reset">Zur Ausgangslage mit @Baseline.ReorderQuantity @Product.Unit zurückkehren</button>
+    }
+    else if (_result is not null)
+    {
+        <div class="scenario-state error" role="alert">
+            <b>@StatusLabel(_result.Status)</b>
+            <span>@_result.UserMessage</span>
+        </div>
+    }
+</section>
+
+@code {
+    private const string LeadTimeQuestion = "Was passiert, wenn die Lieferung zwei Tage später kommt?";
+    private const string DemandQuestion = "Wie verändert sich die Bestellung bei 20 % mehr Absatz?";
+    private const string StockQuestion = "Was wäre, wenn ich sofort zehn Stück mehr auf Lager hätte?";
+
+    [Parameter, EditorRequired] public ProductSnapshot Product { get; set; } = default!;
+    [Parameter, EditorRequired] public ReplenishmentDecision Baseline { get; set; } = default!;
+
+    private string _question = LeadTimeQuestion;
+    private bool _isLoading;
+    private ScenarioAnalysisResult? _result;
+    private string? _baselineIdentity;
+    private long _requestVersion;
+    private CancellationTokenSource? _requestCancellation;
+
+    protected override void OnParametersSet()
+    {
+        var identity = $"{Product.Id}:{Product.Source}:{BaselineFingerprint.Create(Baseline)}";
+        if (string.Equals(identity, _baselineIdentity, StringComparison.Ordinal)) return;
+
+        // Prevent a late response from the previous article/source from replacing this baseline.
+        _baselineIdentity = identity;
+        CancelPendingRequest();
+        _result = null;
+        _question = LeadTimeQuestion;
+        _isLoading = false;
+    }
+
+    private async Task AnalyzeAsync()
+    {
+        if (_isLoading) return;
+        _requestCancellation?.Cancel();
+        _requestCancellation?.Dispose();
+        _requestCancellation = new CancellationTokenSource();
+        var version = ++_requestVersion;
+        var cancellationToken = _requestCancellation.Token;
+        var product = Product;
+        var fingerprint = BaselineFingerprint.Create(Baseline);
+        var question = _question;
+        _isLoading = true;
+        _result = null;
+        try
+        {
+            // The fingerprint binds the request to the exact baseline currently shown in the UI.
+            var result = await Scenarios.AnalyzeAsync(product, question, fingerprint, cancellationToken);
+            if (version == _requestVersion && !cancellationToken.IsCancellationRequested)
+                _result = result;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Navigation, data-source changes and newer submissions intentionally cancel this call.
+        }
+        finally
+        {
+            if (version == _requestVersion) _isLoading = false;
+        }
+    }
+
+    private void SelectQuestion(string question) => _question = question;
+    private void Reset() { _result = null; _question = LeadTimeQuestion; }
+
+    private void CancelPendingRequest()
+    {
+        _requestVersion++;
+        _requestCancellation?.Cancel();
+        _requestCancellation?.Dispose();
+        _requestCancellation = null;
+    }
+
+    public void Dispose() => CancelPendingRequest();
+
+    private static string Signed(decimal value) => value.ToString("+0.##;-0.##;0");
+    private static string DeltaLabel(decimal value) => value switch
+    {
+        > 0 => "zusätzlicher Nachbestellbedarf",
+        < 0 => "geringerer Nachbestellbedarf",
+        _ => "keine Mengenänderung"
+    };
+    private static string ParameterLabel(ScenarioIntent? intent) => intent?.Parameter switch
+    {
+        ScenarioParameter.LeadTimeDeltaDays => $"Lieferzeit {Signed(intent.Value ?? 0)} Tage",
+        ScenarioParameter.DemandChangePercent => $"Nachfrage {Signed(intent.Value ?? 0)} %",
+        ScenarioParameter.StockDeltaUnits => $"Sofortbestand {Signed(intent.Value ?? 0)} Stück",
+        _ => "–"
+    };
+    private static string StatusLabel(ScenarioAnalysisStatus status) => status switch
+    {
+        ScenarioAnalysisStatus.ClarificationRequired => "Rückfrage erforderlich",
+        ScenarioAnalysisStatus.Unsupported => "Szenario nicht unterstützt",
+        ScenarioAnalysisStatus.ValidationFailed => "Szenario nicht zulässig",
+        ScenarioAnalysisStatus.BaselineConflict => "Produktdaten wurden geändert – Analyse bitte aktualisieren",
+        ScenarioAnalysisStatus.NotEvaluable => "Ausgangsdaten nicht auswertbar",
+        ScenarioAnalysisStatus.ProviderUnavailable => "AI Assistant ist nicht konfiguriert",
+        ScenarioAnalysisStatus.ProviderFailed => "AI-Analyse fehlgeschlagen",
+        _ => "Szenarioanalyse vorübergehend nicht verfügbar"
+    };
+}

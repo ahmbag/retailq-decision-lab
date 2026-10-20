@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
+  <title id="title">RetailQ Decision Lab logical architecture</title>
+  <desc id="description">Five architecture zones show Blazor presentation, controlled AI orchestration, deterministic core domain, integration infrastructure and external or demo sources.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7f8f4"/><stop offset="1" stop-color="#e8eee8"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#14201b" flood-opacity="0.09"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#66756d"/></marker>
+    <style>
+      .title{font:700 36px Inter,"Segoe UI",Arial,sans-serif;fill:#14201b;letter-spacing:-1px}.subtitle{font:400 17px Inter,"Segoe UI",Arial,sans-serif;fill:#657169}.zone{font:700 15px Inter,"Segoe UI",Arial,sans-serif;fill:#14201b;letter-spacing:1.4px}.ct{font:700 17px Inter,"Segoe UI",Arial,sans-serif;fill:#14201b}.tx{font:400 13px Inter,"Segoe UI",Arial,sans-serif;fill:#5d6962}.flow{fill:none;stroke:#66756d;stroke-width:2;marker-end:url(#arrow)}.ai{fill:none;stroke:#9a785c;stroke-width:2;stroke-dasharray:7 6;marker-end:url(#arrow)}.fl{font:600 11px Inter,"Segoe UI",Arial,sans-serif;fill:#637068;letter-spacing:.3px}
+      text[fill="#fff"]{fill:#fff}text[fill="#dfe9e2"]{fill:#dfe9e2}text[fill="#c6d2ca"]{fill:#c6d2ca}text[fill="#bdcbc1"]{fill:#bdcbc1}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="url(#background)"/><circle cx="1450" cy="70" r="190" fill="#dbe8d8" opacity=".7"/><circle cx="80" cy="850" r="210" fill="#f2ded6" opacity=".45"/>
+  <text x="80" y="72" class="title">RetailQ Decision Lab</text><text x="80" y="102" class="subtitle">Logical architecture · deterministic decisions with bounded AI</text>
+  <rect x="1280" y="52" width="240" height="45" rx="22" fill="#14201b"/><circle cx="1310" cy="74" r="6" fill="#cae066"/><text x="1328" y="80" style="font:600 13px Inter,'Segoe UI',Arial,sans-serif;fill:#fff;letter-spacing:.8px">READ-ONLY MVP</text>
+  <g filter="url(#shadow)"><rect x="70" y="150" width="260" height="650" rx="20" fill="#fff" stroke="#d4ddd7"/><rect x="360" y="150" width="260" height="650" rx="20" fill="#fff9f5" stroke="#e8d9cf"/><rect x="650" y="150" width="260" height="650" rx="20" fill="#f4f8ee" stroke="#cdd9bf"/><rect x="940" y="150" width="260" height="650" rx="20" fill="#f3f7fa" stroke="#cad7de"/><rect x="1230" y="150" width="300" height="650" rx="20" fill="#17251f" stroke="#17251f"/></g>
+  <text x="95" y="188" class="zone">PRESENTATION</text><text x="385" y="188" class="zone">AI ORCHESTRATION</text><text x="675" y="188" class="zone">CORE DOMAIN</text><text x="965" y="188" class="zone">INFRASTRUCTURE</text><text x="1255" y="188" class="zone" fill="#dfe9e2">EXTERNAL + FIXTURES</text>
+  <g><rect x="95" y="225" width="210" height="125" rx="14" fill="#f1f4ef"/><text x="115" y="258" class="ct">Blazor Dashboard</text><text x="115" y="285" class="tx">Decision queue</text><text x="115" y="307" class="tx">Provider health + lineage</text><text x="115" y="329" class="tx">Responsive release UI</text>
+  <rect x="95" y="385" width="210" height="155" rx="14" fill="#f1f4ef"/><text x="115" y="418" class="ct">Product 360°</text><text x="115" y="445" class="tx">Calculation trace</text><text x="115" y="467" class="tx">Validated explanation</text><text x="115" y="489" class="tx">What-if comparison</text><text x="115" y="511" class="tx">Immutable baseline</text>
+  <rect x="95" y="575" width="210" height="90" rx="14" fill="#14201b"/><text x="115" y="610" class="ct" fill="#fff">Browser boundary</text><text x="115" y="637" class="tx" fill="#c6d2ca">No provider credentials</text></g>
+  <g><rect x="385" y="225" width="210" height="125" rx="14" fill="#f8ebe4"/><text x="405" y="258" class="ct">Intent extraction</text><text x="405" y="285" class="tx">One typed parameter</text><text x="405" y="307" class="tx">Strict JSON Schema</text><text x="405" y="329" class="tx">Clarify or reject</text>
+  <rect x="385" y="385" width="210" height="125" rx="14" fill="#f8ebe4"/><text x="405" y="418" class="ct">Decision explanation</text><text x="405" y="445" class="tx">Minimal fact snapshot</text><text x="405" y="467" class="tx">Action consistency check</text><text x="405" y="489" class="tx">Best-effort display</text>
+  <rect x="385" y="545" width="210" height="120" rx="14" fill="#fff" stroke="#dcbfaa" stroke-width="2"/><text x="405" y="578" class="ct">Trust guardrail</text><text x="405" y="605" class="tx">AI never sets quantity</text><text x="405" y="627" class="tx">Domain validates meaning</text><text x="405" y="649" class="tx">Failure stays isolated</text></g>
+  <g><rect x="675" y="225" width="210" height="155" rx="14" fill="#dfeacd"/><text x="695" y="258" class="ct">Decision Engine</text><text x="695" y="285" class="tx">Average daily demand</text><text x="695" y="307" class="tx">Coverage + target stock</text><text x="695" y="329" class="tx">Reorder quantity</text><text x="695" y="351" class="tx">Explicit error states</text>
+  <rect x="675" y="415" width="210" height="135" rx="14" fill="#dfeacd"/><text x="695" y="448" class="ct">Scenario evaluation</text><text x="695" y="475" class="tx">Bounded overlay</text><text x="695" y="497" class="tx">Same Decision Engine</text><text x="695" y="519" class="tx">Baseline fingerprint</text>
+  <rect x="675" y="585" width="210" height="80" rx="14" fill="#fff" stroke="#afc594"/><text x="695" y="618" class="ct">ProductSnapshot</text><text x="695" y="645" class="tx">Provider-neutral + lineage</text></g>
+  <g><rect x="965" y="225" width="210" height="155" rx="14" fill="#dfeaf0"/><text x="985" y="258" class="ct">SAP OData adapters</text><text x="985" y="285" class="tx">Product V4 + Stock V2</text><text x="985" y="307" class="tx">Paging + APIKey auth</text><text x="985" y="329" class="tx">Retry + typed failures</text><text x="985" y="351" class="tx">DTO mapping + lineage</text>
+  <rect x="965" y="415" width="210" height="135" rx="14" fill="#dfeaf0"/><text x="985" y="448" class="ct">OpenAI adapters</text><text x="985" y="475" class="tx">Responses API</text><text x="985" y="497" class="tx">store: false</text><text x="985" y="519" class="tx">Timeout + safe errors</text>
+  <rect x="965" y="585" width="210" height="80" rx="14" fill="#fff" stroke="#abc3d0"/><text x="985" y="618" class="ct">Fixture provider</text><text x="985" y="645" class="tx">Embedded OData contracts</text></g>
+  <g><rect x="1255" y="225" width="250" height="145" rx="14" fill="#26382f" stroke="#4a6354"/><text x="1275" y="258" class="ct" fill="#fff">SAP API Sandbox</text><text x="1275" y="285" class="tx" fill="#bdcbc1">Product / Description V4</text><text x="1275" y="307" class="tx" fill="#bdcbc1">Material Stock V2</text><text x="1275" y="329" class="tx" fill="#bdcbc1">Read-only sample service</text><text x="1275" y="351" style="font:600 11px Inter,'Segoe UI',Arial,sans-serif;fill:#cae066">OPTIONAL CREDENTIAL</text>
+  <rect x="1255" y="405" width="250" height="115" rx="14" fill="#26382f" stroke="#4a6354"/><text x="1275" y="438" class="ct" fill="#fff">Versioned fixtures</text><text x="1275" y="465" class="tx" fill="#bdcbc1">Offline OData contracts</text><text x="1275" y="487" class="tx" fill="#bdcbc1">15 synthetic POS profiles</text>
+  <rect x="1255" y="555" width="250" height="110" rx="14" fill="#26382f" stroke="#4a6354"/><text x="1275" y="588" class="ct" fill="#fff">OpenAI Responses API</text><text x="1275" y="615" class="tx" fill="#bdcbc1">Structured output only</text><text x="1275" y="637" style="font:600 11px Inter,'Segoe UI',Arial,sans-serif;fill:#cae066">OPTIONAL CREDENTIAL</text></g>
+  <!-- Orthogonal routes stay between cards so the diagram never obscures labels. -->
+  <path d="M1255 300H1175" class="flow"/>
+  <path d="M1255 465H1215V625H1175" class="flow"/>
+  <path d="M965 625H885" class="flow"/>
+  <path d="M965 345H925V605H885" class="flow"/>
+  <path d="M885 585H900V395H780V380" class="flow"/>
+  <path d="M675 250H635V210H345V290H305" class="flow"/>
+  <path d="M675 345H640V445H595" class="ai"/>
+  <path d="M385 445H305" class="ai"/>
+  <path d="M595 280H625V475H675" class="ai"/>
+  <path d="M595 495H635V710H925V490H965" class="ai"/>
+  <text x="690" y="738" class="fl">Server-side provider calls · validated output</text>
+  <path d="M1175 480H1215V610H1255" class="ai"/>
+  <line x1="80" y1="850" x2="125" y2="850" class="flow"/><text x="138" y="855" class="fl">trusted deterministic data flow</text><line x1="395" y1="850" x2="440" y2="850" class="ai"/><text x="453" y="855" class="fl">bounded AI request / validated response</text><text x="1515" y="855" text-anchor="end" style="font:500 12px Inter,'Segoe UI',Arial,sans-serif;fill:#7a857e">DL-07A · 2026-10-19</text>
+</svg>

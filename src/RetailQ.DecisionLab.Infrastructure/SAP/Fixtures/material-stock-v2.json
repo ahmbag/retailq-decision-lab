@@ -1,0 +1,21 @@
+{
+  "d": { "results": [
+    { "Material":"100012", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"20" },
+    { "Material":"100012", "Plant":"001", "StorageLocation":"0002", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"8" },
+    { "Material":"100012", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"02", "MatlWrhsStkQtyInMatlBaseUnit":"12" },
+    { "Material":"100024", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"44" },
+    { "Material":"100031", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"19" },
+    { "Material":"100045", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"180" },
+    { "Material":"100056", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"34" },
+    { "Material":"100067", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"62" },
+    { "Material":"100073", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"83" },
+    { "Material":"100081", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"26" },
+    { "Material":"100094", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"38" },
+    { "Material":"100108", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"21" },
+    { "Material":"100119", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"48" },
+    { "Material":"100127", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"13" },
+    { "Material":"100136", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"73" },
+    { "Material":"100142", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"35" },
+    { "Material":"100155", "Plant":"001", "StorageLocation":"0001", "InventoryStockType":"01", "MatlWrhsStkQtyInMatlBaseUnit":"25" }
+  ] }
+}

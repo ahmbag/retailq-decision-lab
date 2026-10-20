@@ -1,0 +1,53 @@
+# .NET build output
+**/[Bb]in/
+**/[Oo]bj/
+artifacts/
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# IDE and user-specific state
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+_ReSharper*/
+*.DotSettings.user
+
+# Logs, traces, dumps and temporary files
+*.log
+*.trace
+*.dmp
+*.tmp
+*.bak
+*.swp
+*.pid
+*.http.env.json
+
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+secrets.json
+appsettings.Local.json
+appsettings.*.Local.json
+appsettings.*.local.json
+launchSettings.local.json
+
+# Certificates and private keys
+*.pfx
+*.p12
+*.pem
+*.key
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# DL-07B showcase output is curated separately before publication.
+presentation/

@@ -1,0 +1,102 @@
+@inject ILlmDecisionAssistant Assistant
+@implements IDisposable
+
+<section class="ai-panel" aria-live="polite" aria-busy="@_isLoading">
+    <p class="eyebrow">AI DECISION EXPLANATION</p>
+    <h2>Warum diese Empfehlung?</h2>
+    <p class="ai-intro">Die KI erläutert ausschließlich die bereits berechnete Entscheidung. Bestellmenge und Kennzahlen bleiben unverändert.</p>
+
+    @if (_isLoading)
+    {
+        <div class="ai-state" role="status"><b>Erklärung wird erstellt …</b><p>Die validierte Bestandsentscheidung bleibt währenddessen unverändert sichtbar.</p></div>
+    }
+    else if (_result is null)
+    {
+        <button type="button" class="explain-button" @onclick="ExplainAsync" disabled="@_isLoading">Entscheidung erklären <span aria-hidden="true">→</span></button>
+    }
+    else if (_result.Status == AiExplanationStatus.Completed)
+    {
+        <div class="ai-answer">
+            <p>@_result.Explanation!.Summary</p>
+            <div class="driver-list">@foreach (var driver in _result.Explanation.DriverCodes) { <span>@DriverLabel(driver)</span> }</div>
+            <p class="ai-risk"><b>Risiko:</b> @_result.Explanation.RiskNote</p>
+            <small>Generiert durch @_result.Explanation.Model · Entscheidung regelbasiert validiert</small>
+        </div>
+        <button type="button" class="link-button" @onclick="ExplainAsync" disabled="@_isLoading">Erklärung erneut anfordern</button>
+    }
+    else
+    {
+        <div class="ai-state"><b>@(_result.Status == AiExplanationStatus.Unavailable ? "AI nicht eingerichtet" : "AI vorübergehend nicht verfügbar")</b><p>@_result.UserMessage</p><small>Die Nachbestellempfehlung bleibt unverändert verfügbar.</small></div>
+        <button type="button" class="link-button" @onclick="ExplainAsync" disabled="@_isLoading">Erneut versuchen</button>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public ReplenishmentDecision Decision { get; set; } = default!;
+    private AiExplanationResult? _result;
+    private bool _isLoading;
+    private string? _decisionIdentity;
+    private long _requestVersion;
+    private CancellationTokenSource? _requestCancellation;
+
+    protected override void OnParametersSet()
+    {
+        var identity = BaselineFingerprint.Create(Decision);
+        if (string.Equals(identity, _decisionIdentity, StringComparison.Ordinal)) return;
+
+        // A route or data-source change invalidates both the visible result and every in-flight
+        // request. The version check also protects against providers that complete after cancel.
+        _decisionIdentity = identity;
+        CancelPendingRequest();
+        _result = null;
+        _isLoading = false;
+    }
+
+    private async Task ExplainAsync()
+    {
+        if (_isLoading) return;
+
+        // The explicit loading flag prevents duplicate requests and gives the presenter immediate
+        // feedback. Only the compact snapshot crosses the boundary; the server validates its response.
+        _requestCancellation?.Cancel();
+        _requestCancellation?.Dispose();
+        _requestCancellation = new CancellationTokenSource();
+        var version = ++_requestVersion;
+        var cancellationToken = _requestCancellation.Token;
+        var snapshot = DecisionSnapshotBuilder.FromDecision(Decision);
+        _isLoading = true;
+        try
+        {
+            var result = await Assistant.ExplainAsync(snapshot, cancellationToken);
+            if (version == _requestVersion && !cancellationToken.IsCancellationRequested)
+                _result = result;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Navigation and newer requests are normal cancellation paths, not user-facing errors.
+        }
+        finally
+        {
+            if (version == _requestVersion) _isLoading = false;
+        }
+    }
+
+    private void CancelPendingRequest()
+    {
+        _requestVersion++;
+        _requestCancellation?.Cancel();
+        _requestCancellation?.Dispose();
+        _requestCancellation = null;
+    }
+
+    public void Dispose() => CancelPendingRequest();
+
+    private static string DriverLabel(string code) => code switch
+    {
+        "COVERAGE_BELOW_LEAD_TIME" => "Reichweite unter Lieferzeit",
+        "SAFETY_BUFFER" => "Sicherheitspuffer",
+        "NO_CURRENT_DEMAND" => "Kein aktueller Absatz",
+        "STABLE_STOCK" => "Zielbestand erreicht",
+        _ => code
+    };
+}

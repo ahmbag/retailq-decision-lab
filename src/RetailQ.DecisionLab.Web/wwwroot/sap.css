@@ -1,0 +1,31 @@
+.source-banner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px 28px;
+    align-items: center;
+    background: #eef4e8;
+    border: 1px solid #cbdcc2;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+}
+.source-banner.source-error { background: #fff0ec; border-color: #efb8aa; }
+.source-banner.compact { padding: 14px 18px; }
+.source-banner strong { font-size: 15px; }
+.source-banner p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.source-banner .eyebrow { margin: 0 0 5px; }
+.source-banner > small { grid-column: 1 / -1; color: #9d3e2c; }
+.source-facts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.source-facts span {
+    font: 500 9px 'DM Mono';
+    letter-spacing: .7px;
+    background: #fff;
+    padding: 7px 9px;
+    border: 1px solid var(--line);
+}
+.eligibility-note { background: #fff5d7; border: 1px solid #ead38a; padding: 14px 18px; font-size: 12px; line-height: 1.5; }
+.empty-chart { min-height: 170px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; text-align: center; padding: 20px; }
+.status.notevaluable { background: #e8ece9; color: #536158; }
+@media (max-width: 760px) {
+    .source-banner { grid-template-columns: 1fr; }
+    .source-facts { justify-content: flex-start; }
+}

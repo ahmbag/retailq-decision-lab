@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\RetailQ.DecisionLab.Core\RetailQ.DecisionLab.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Uses only the shared ASP.NET Core framework; no third-party AI SDK dependency is needed. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- Fixtures are embedded so that the SAP-compatible demo works without a network or SAP credentials. -->
+  <ItemGroup>
+    <EmbeddedResource Include="SAP\Fixtures\*.json" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

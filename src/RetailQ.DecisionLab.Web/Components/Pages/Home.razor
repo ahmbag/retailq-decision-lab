@@ -1,0 +1,57 @@
+@page "/"
+@inject IRetailDataProvider Provider
+@inject IDecisionEngine Engine
+
+<PageTitle>RetailQ Decision Lab</PageTitle>
+
+<section class="source-banner @(Provider.Status.IsHealthy ? "source-ok" : "source-error")">
+    <div><p class="eyebrow">AKTIVE DATENQUELLE</p><strong>@Provider.Status.Label</strong><p>@Provider.Status.Description</p></div>
+    <div class="source-facts"><span>@Provider.Status.ProductCount Produkte</span><span>@Provider.Status.StockRecordCount Bestandszeilen</span><span>@(Provider.Status.IsRemote ? "REMOTE ODATA" : "LOKAL")</span></div>
+    @if (!string.IsNullOrWhiteSpace(Provider.Status.Error)) { <small>@Provider.Status.Error</small> }
+</section>
+
+<section class="hero">
+    <div><p class="eyebrow">INVENTORY INTELLIGENCE</p><h1>Entscheidungen, die<br /><em>Bestände bewegen.</em></h1><p class="hero-copy">@Decisions.Count überwachte Produkte · kritische Risiken zuerst · jede Empfehlung mit nachvollziehbarer Datenbasis.</p></div>
+    <div class="snapshot"><span>BEWERTUNGSKONTEXT</span><strong>@LastRefresh</strong><small>Auswertungsfenster: letzte 14 Kalendertage</small></div>
+</section>
+
+<section class="metrics" aria-label="Entscheidungsübersicht">
+    <div class="metric alert primary"><span>KRITISCHE ENTSCHEIDUNGEN</span><strong>@CriticalCount</strong><small>Versorgung bis zur Lieferung gefährdet</small></div>
+    <div class="metric"><span>OFFENE EMPFEHLUNGEN</span><strong>@RecommendationCount</strong><small>mit konkretem Bestellvorschlag</small></div>
+    <div class="metric"><span>ÜBERWACHTE PRODUKTE</span><strong>@Decisions.Count</strong><small>in der aktiven Datenquelle</small></div>
+    <div class="metric"><span>NICHT BEWERTBAR</span><strong>@NotAssessableCount</strong><small>Bestand oder POS-Historie fehlt</small></div>
+</section>
+
+<section class="queue-panel">
+    <div class="section-heading"><div><p class="eyebrow">PRIORISIERT NACH VERSORGUNGSRISIKO</p><h2>Priority Decisions</h2></div><span class="live-label"><i></i> @RecommendationCount offene Empfehlungen</span></div>
+    <div class="queue-header"><span>ARTIKEL</span><span>BESTAND</span><span>REICHWEITE</span><span>STATUS</span><span>EMPFOHLENE AKTION</span><span></span></div>
+    @if (Decisions.Count == 0)
+    {
+        <div class="queue-empty" role="alert"><b>Keine Produkte verfügbar.</b><span>@Provider.Status.Description</span>@if (!string.IsNullOrWhiteSpace(Provider.Status.Error)) { <small>@Provider.Status.Error</small> }</div>
+    }
+    @foreach (var item in Decisions.OrderBy(x => Rank(x.Status)).ThenBy(x => x.CoverageDays ?? decimal.MaxValue))
+    {
+        <a class="queue-row" href="@($"/artikel/{item.Product.Id}")" aria-label="@($"Artikelakte {item.Product.Name} öffnen, Status {StatusLabel(item.Status)}")">
+            <span class="product"><b>@item.Product.Name</b><small>@item.Product.Sku · @item.Product.Category · @ProductMarker(item.Product)</small></span>
+            <span class="mono">@(item.Product.UnrestrictedStock?.ToString() ?? "—") @item.Product.Unit</span>
+            <span class="coverage">@(item.CoverageDays is null ? "—" : $"{item.CoverageDays:0.0} T.")</span>
+            <span><b class="status @item.Status.ToString().ToLowerInvariant()">@StatusLabel(item.Status)</b></span>
+            <span class="action">@(item.ReorderQuantity > 0 ? $"{item.ReorderQuantity} {item.Product.Unit} bestellen" : item.Status == DecisionStatus.NotEvaluable ? "Nicht bewertbar" : item.Status == DecisionStatus.NoCurrentDemand ? "Absatz beobachten" : "Keine Aktion")</span>
+            <span class="arrow">→</span>
+        </a>
+    }
+</section>
+
+@code {
+    private List<ReplenishmentDecision> Decisions { get; } = [];
+    private int CriticalCount => Decisions.Count(x => x.Status == DecisionStatus.Critical);
+    private int RecommendationCount => Decisions.Count(x => x.ReorderQuantity > 0);
+    private int NotAssessableCount => Decisions.Count(x => x.Status is DecisionStatus.NotEvaluable or DecisionStatus.DataError);
+    private string LastRefresh => Provider.Status.RefreshedAtUtc?.ToLocalTime().ToString("dd.MM.yyyy, HH:mm 'Uhr'") ?? "Zeitpunkt unbekannt";
+    protected override void OnInitialized() => Decisions.AddRange(Provider.GetProducts().Select(product => Engine.Evaluate(product)));
+    private static int Rank(DecisionStatus s) => s switch { DecisionStatus.Critical => 0, DecisionStatus.Reorder => 1, DecisionStatus.NotEvaluable or DecisionStatus.DataError => 2, DecisionStatus.Stable => 3, _ => 4 };
+    private static string StatusLabel(DecisionStatus s) => s switch { DecisionStatus.Critical => "Kritisch", DecisionStatus.Reorder => "Nachbestellen", DecisionStatus.Stable => "Stabil", DecisionStatus.NoCurrentDemand => "Kein Absatz", DecisionStatus.NotEvaluable => "Nicht bewertbar", DecisionStatus.DataError => "Datenfehler", _ => "Prüfen" };
+    private static string ProductMarker(ProductSnapshot product) => product.IsReplenishable
+        ? product.Source.Replace('_', ' ')
+        : product.ProductType == "SERV" || product.Unit == "H" ? "NICHT DISPONIERBAR" : "KEINE POS-ZUORDNUNG";
+}

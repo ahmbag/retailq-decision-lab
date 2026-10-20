@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RetailQ.DecisionLab.Core/RetailQ.DecisionLab.Core.csproj" />
+    <Project Path="src/RetailQ.DecisionLab.Infrastructure/RetailQ.DecisionLab.Infrastructure.csproj" />
+    <Project Path="src/RetailQ.DecisionLab.Web/RetailQ.DecisionLab.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RetailQ.DecisionLab.Tests/RetailQ.DecisionLab.Tests.csproj" />
+  </Folder>
+</Solution>
